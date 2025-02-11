@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+
+   
+</head>
+<body>
+
+    <h1>🌤️ Weather Dashboard</h1>
+    <p class="loading">Loading weather data...</p>
+
+    <div id="weatherContainer"></div>
+<script>
+    async function fetchData (){
+        try {
+            //construction de l'url
+
+            const localUrl = await fetch("http://localhost:3000/weather");
+            const apiData = await localUrl.json();
+            //on attend la réponse au format json à l'url port 3000
+
+            console.log("Données reçues de l'API :", apiData); // Debug
+
+            // Vérifier si la réponse est bien un tableau
+            if (!Array.isArray(apiData)) {
+                console.error("Erreur: L'API ne renvoie pas un tableau !");
+                return;
+            }
+
+            //On créé des div dans une div principale
+            const weatherDiv = document.getElementById("weatherContainer");
+            weatherDiv.innerHTML="";
+
+            apiData.forEach(city => {
+                const night = "_night"; // Ajoute "_night" pour les images de nuit
+                const isNight = city.is_day === 0 ? night : ""; // Si is_day === 0, ajoute "_night", sinon rien
+                const isNightp = city.is_day === 0 ? "Il faut aller dormir !" : "Il faut travailler !";
+                const card = document.createElement("div");
+                card.className = "weather-container";
+                card.innerHTML = `
+                    <img class="city-image" src="images/${city.city.toLowerCase()}${isNight}.webp" alt="${city.city}">
+                    <h2>${city.city}</h2>
+                    <h3>${city.country}</h3>
+                    <p>Temperature : ${city.temperature} ${city.temperature_unit}</p>
+                    <p>Wind speed : ${city.windspeed}</p>
+                    <p>Radiation : ${city.diffuse_radiation}</p>
+                    <h3>${isNightp}</h3>
+                    <button onclick="like('${city.city}', '${city.country}'), hideButton(this)" class="like-btn" id="likeButton">J'aime</button>
+
+                `;
+                weatherContainer.appendChild(card);
+            });
+        }
+        catch (error) {
+            console.error("Erreur lors de la récupération des données météo :", error);
+            
+        }
+    }
+    fetchData();
+
+    async function like(city, country) {
+        console.log("Ville aimée :", city, country); // Debug
+
+        // Simule un utilisateur (tu peux remplacer par un ID dynamique)
+        const userId = localStorage.getItem("user_id"); 
+
+        try {
+            const response = await fetch("http://localhost:3001/api/user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ id: userId, city: city, country: country }) // Envoie la ville
+            });
+
+            const data = await response.json();
+           
+            console.log("Réponse API :", data);
+        } catch (error) {
+            console.error("Erreur lors de l'envoi de la ville :", error);
+        }
+    }
+
+    function hideButton(button) {
+    button.style.display = "none"; //just let the css value of button to none
+}
+</script>
+
+
+
+</body>
+
+</html>
